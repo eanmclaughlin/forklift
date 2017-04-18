@@ -3,6 +3,7 @@ package forklift.controller;
 import forklift.message.KafkaMessage;
 import forklift.message.MessageStream;
 import forklift.message.ReadableMessageStream;
+
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -10,8 +11,11 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
+import org.apache.kafka.common.serialization.Deserializer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,14 +45,16 @@ public class KafkaController {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final KafkaConsumer<?, ?> kafkaConsumer;
     private final MessageStream messageStream;
+    private final Deserializer valueDeserializer;
     private volatile boolean topicsChanged = false;
     private AcknowledgedRecordHandler acknowledgmentHandler = new AcknowledgedRecordHandler();
     private Map<TopicPartition, OffsetAndMetadata> failedOffset = null;
     private Map<TopicPartition, AtomicInteger> flowControl = new ConcurrentHashMap<>();
 
-    public KafkaController(KafkaConsumer<?, ?> kafkaConsumer, MessageStream messageStream) {
+    public KafkaController(KafkaConsumer<?, ?> kafkaConsumer, MessageStream messageStream, Deserializer valueDeserializer) {
         this.kafkaConsumer = kafkaConsumer;
         this.messageStream = messageStream;
+        this.valueDeserializer = valueDeserializer;
     }
 
     /**
@@ -58,6 +64,10 @@ public class KafkaController {
      */
     public ReadableMessageStream getMessageStream() {
         return this.messageStream;
+    }
+
+    public Deserializer getValueDeserializer() {
+        return valueDeserializer;
     }
 
     /**

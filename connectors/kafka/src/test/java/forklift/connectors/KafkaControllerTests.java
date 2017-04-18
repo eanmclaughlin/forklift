@@ -9,8 +9,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
+
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -21,6 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +48,7 @@ public class KafkaControllerTests {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        this.controller = new KafkaController(kafkaConsumer, messageStream);
+        this.controller = new KafkaController(kafkaConsumer, messageStream, mock(KafkaAvroDeserializer.class));
     }
 
     @After

@@ -12,10 +12,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class KafkaMessage extends ForkliftMessage {
     private final KafkaController controller;
     private final ConsumerRecord<?, ?> consumerRecord;
+    private final Object deserializedValue;
 
     public KafkaMessage(KafkaController controller, ConsumerRecord<?, ?> consumerRecord) {
         this.controller = controller;
         this.consumerRecord = consumerRecord;
+        this.deserializedValue = controller.getValueDeserializer().deserialize(consumerRecord.topic(), (byte[]) consumerRecord.value());
+
         createMessage();
     }
 
@@ -37,6 +40,10 @@ public class KafkaMessage extends ForkliftMessage {
         return consumerRecord.topic() + "-" + consumerRecord.partition() + "-" + consumerRecord.offset();
     }
 
+    public byte[] serializedBytes() {
+        return (byte[]) consumerRecord.value();
+    }
+
     /**
      * <strong>WARNING:</strong> Called from constructor
      */
@@ -47,14 +54,15 @@ public class KafkaMessage extends ForkliftMessage {
         }
         else{
             this.setFlagged(true);
-            this.setWarning("Unable to parse message for topic: " + consumerRecord.topic() + " with value: " + consumerRecord.value());
+            this.setWarning("Unable to parse message for topic: " + consumerRecord.topic() +
+                            " with value: " + deserializedValue);
         }
     }
 
     private final String parseRecord(){
         Object value = null;
-        if (consumerRecord.value() instanceof GenericRecord) {
-            GenericRecord genericRecord = (GenericRecord)consumerRecord.value();
+        if (deserializedValue instanceof GenericRecord) {
+            GenericRecord genericRecord = (GenericRecord) deserializedValue;
             Object properties = genericRecord.get(KafkaForkliftProducer.SCHEMA_FIELD_NAME_PROPERTIES);
             if (properties != null) {
                 this.setProperties(KeyValueParser.parse(properties.toString()));
