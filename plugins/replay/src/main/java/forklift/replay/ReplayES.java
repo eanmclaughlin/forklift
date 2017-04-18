@@ -13,6 +13,7 @@ import forklift.decorators.LifeCycle;
 import forklift.decorators.Queue;
 import forklift.decorators.Service;
 import forklift.message.Header;
+import forklift.message.KafkaMessage;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import org.elasticsearch.common.settings.Settings;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +38,7 @@ public class ReplayES {
     private final ForkliftProducerI producer;
     private final ConsumerThread thread;
     private final Consumer consumer;
+    private final String connectorName;
 
     public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, 9200, clusterName, connector);
@@ -74,6 +77,8 @@ public class ReplayES {
                     node.close();
             }
         });
+
+        this.connectorName = connector.getClass().getSimpleName();
 
         this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Queue.class).value());
         final Forklift forklift = new Forklift();
@@ -190,6 +195,15 @@ public class ReplayES {
         // Add a timestamp of when we processed this replay message.
         fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
+        // Remember the connector being used, so that it can be replayed on the right bus
+        fields.put("connector", connectorName);
+
+        if (msg instanceof KafkaMessage) {
+            final KafkaMessage kafkaMsg = (KafkaMessage) msg;
+
+            fields.put("serialized-form", Base64.getEncoder().encodeToString(kafkaMsg.serializedBytes()));
+        }
+
         // Store the queue/topic.
         if (mr.getConsumer().getQueue() != null)
             fields.put("queue", mr.getConsumer().getQueue().value());
@@ -203,7 +217,7 @@ public class ReplayES {
             try {
                 this.producer.send(new ReplayESWriterMsg(id, fields));
             } catch (ProducerException e) {
-                log.error("Unable to producer ES msg", e);
+                log.error("Unable to produce ES msg", e);
             }
         }
     }

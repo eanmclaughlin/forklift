@@ -21,6 +21,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift" % "1.0",
+  "com.github.dcshock" % "forklift-kafka" % "1.0",
   "org.elasticsearch" % "elasticsearch" % "2.4.1",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3"
