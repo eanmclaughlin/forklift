@@ -10,7 +10,7 @@ object ForkliftBuild extends Build {
     lazy val replay = Project(
         id = "replay",
         base = file("plugins/replay")
-    ).dependsOn(core)
+    ).dependsOn(core, kafka)
 
     lazy val retry = Project(
         id = "retry",

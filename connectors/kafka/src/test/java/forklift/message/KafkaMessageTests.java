@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import forklift.connectors.ConnectorException;
 import forklift.controller.KafkaController;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,13 +20,14 @@ public class KafkaMessageTests {
     @Before
     public void setup() {
         controller = mock(KafkaController.class);
-        record = new ConsumerRecord("testTopic", 0, 1L, "key", "value");
+        when(controller.getValueDeserializer()).thenReturn(new StringDeserializer());
+
+        record = new ConsumerRecord("testTopic", 0, 1L, "key".getBytes(), "value".getBytes());
         message = new KafkaMessage(controller, record);
     }
 
     @Test
     public void acknowledgeFalseTest() throws ConnectorException, InterruptedException {
-
         when(controller.acknowledge(record)).thenReturn(false);
         boolean acknowledged = message.acknowledge();
         assertFalse(acknowledged);
