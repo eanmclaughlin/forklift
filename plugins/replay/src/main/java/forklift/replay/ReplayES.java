@@ -13,7 +13,7 @@ import forklift.decorators.LifeCycle;
 import forklift.decorators.Queue;
 import forklift.decorators.Service;
 import forklift.message.Header;
-import forklift.message.KafkaMessage;
+import forklift.message.SerializedMessage;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import org.elasticsearch.common.settings.Settings;
@@ -198,10 +198,10 @@ public class ReplayES {
         // Remember the connector being used, so that it can be replayed on the right bus
         fields.put("connector", connectorName);
 
-        if (msg instanceof KafkaMessage) {
-            final KafkaMessage kafkaMsg = (KafkaMessage) msg;
+        if (msg instanceof SerializedMessage) {
+            final SerializedMessage serializedMessage = (SerializedMessage) msg;
 
-            fields.put("serialized-form", Base64.getEncoder().encodeToString(kafkaMsg.serializedBytes()));
+            fields.put("serialized-form", Base64.getEncoder().encodeToString(serializedMessage.getSerializedBytes()));
         }
 
         // Store the queue/topic.

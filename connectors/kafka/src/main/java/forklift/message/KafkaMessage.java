@@ -4,12 +4,13 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.controller.KafkaController;
+import forklift.message.SerializedMessage;
 import forklift.producers.KafkaForkliftProducer;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-public class KafkaMessage extends ForkliftMessage {
+public class KafkaMessage extends ForkliftMessage implements SerializedMessage {
     private final KafkaController controller;
     private final ConsumerRecord<?, ?> consumerRecord;
     private final Object deserializedValue;
@@ -40,7 +41,7 @@ public class KafkaMessage extends ForkliftMessage {
         return consumerRecord.topic() + "-" + consumerRecord.partition() + "-" + consumerRecord.offset();
     }
 
-    public byte[] serializedBytes() {
+    public byte[] getSerializedBytes() {
         return (byte[]) consumerRecord.value();
     }
 
